@@ -978,6 +978,242 @@ function do_smilies(string $text)
 
 
 //
+// Extract code blocks (supports Markdown backticks, indent, and [code=lang])
+//
+function extract_code_enhanced($text)
+{
+	global $pun_config;
+
+	$blocks = [];
+	$replacements = [];
+	$offset = 0;
+	$block_id = 0;
+
+	// Because we run after pun_htmlspecialchars, some chars are escaped.
+	// ` ``` ` -> ` ``` `
+	// ` < ` -> ` &lt; `
+	// Indent 4 spaces is still 4 spaces.
+	// [code] is [code].
+	// <pre><code> is &lt;pre&gt;&lt;code&gt;
+
+	// Logic: We must find the *first* occurrence of any start sequence to handle order correctly.
+	// Start sequences:
+	// 1. ``` (Backticks)
+	// 2. [code (BBCode)
+	// 3. &lt;pre&gt;&lt;code&gt; (HTML pre-escaped)
+	// 4. Indented block (Start of line with 4 spaces or tab)
+
+	// Since we need to replace them with placeholders, we can just run regexes in priority order?
+	// But if [code] contains ``` inside, or ``` contains [code], priority matters.
+	// Usually code blocks are "atomic". The first one that opens consumes until its closer.
+
+	// We will use a loop to find the earliest occurrence.
+
+	$new_text = '';
+	$len = strlen($text);
+
+	while ($offset < $len) {
+		$matches = [];
+		$min_pos = $len;
+		$type = '';
+
+		// 1. Backticks: ```lang? ... ```
+		// Note: pun_htmlspecialchars doesn't touch backticks.
+		if (preg_match('/```(\w*)\s*(\n)?/', $text, $m, PREG_OFFSET_CAPTURE, $offset)) {
+			if ($m[0][1] < $min_pos) {
+				$min_pos = $m[0][1];
+				$type = 'backtick';
+				$matches['backtick'] = $m;
+			}
+		}
+
+		// 2. BBCode: [code] or [code=...]
+		// We use a simple check for start tag here, and extract_blocks logic for full balance later if selected.
+		if (preg_match('/\[code(?:=([^\]]*))?\]/i', $text, $m, PREG_OFFSET_CAPTURE, $offset)) {
+			if ($m[0][1] < $min_pos) {
+				// Prioritize backtick if it starts at same position (unlikely)
+				$min_pos = $m[0][1];
+				$type = 'bbcode';
+				$matches['bbcode'] = $m;
+			}
+		}
+
+		// 3. HTML: &lt;pre&gt;&lt;code&gt;
+		if (preg_match('/&lt;pre&gt;&lt;code&gt;/i', $text, $m, PREG_OFFSET_CAPTURE, $offset)) {
+			if ($m[0][1] < $min_pos) {
+				$min_pos = $m[0][1];
+				$type = 'html';
+				$matches['html'] = $m;
+			}
+		}
+
+		// 4. Indent: Start of line (or text start) + 4 spaces or tab.
+		// Check for newline before offset or if offset is 0.
+		// This checks if we are at start of line.
+		// Actually, searching for the first indented line from offset is hard with simple strpos.
+		// We'll skip complex indent detection mixed with others for now and rely on others being explicit.
+		// If we want indent support, we should scan line by line or find next \n followed by spaces.
+
+		// Let's stick to the prompt requirements: "Text blocks indented with 4+ spaces".
+		// We'll add a regex for this.
+		// Match newline (or start) then 4 spaces.
+		// Note: pun_htmlspecialchars might have run? Yes. Spaces are preserved.
+		if (preg_match('/(?:^|\n)(?:    |\t)/', $text, $m, PREG_OFFSET_CAPTURE, $offset)) {
+			// Ensure it's not inside something else. The loop ensures we pick the earliest.
+			// But we need to be careful.
+			$pos = $m[0][1];
+			// If match started with \n, the block content starts after \n.
+			if ($text[$pos] === "\n") $pos++;
+
+			if ($pos < $min_pos) {
+				// Only valid if this "indent block" isn't just a part of text.
+				// Markdown code blocks require preceding blank line usually, but strict requirement says "indented with 4+ spaces".
+				$min_pos = $pos;
+				$type = 'indent';
+				$matches['indent'] = $m;
+			}
+		}
+
+		if ($min_pos === $len) {
+			// No more blocks
+			$new_text .= substr($text, $offset);
+			break;
+		}
+
+		// Append text before the block
+		$new_text .= substr($text, $offset, $min_pos - $offset);
+		$offset = $min_pos;
+
+		// Handle the found block
+		if ($type === 'backtick') {
+			$lang = $matches['backtick'][1][0];
+			$start_len = strlen($matches['backtick'][0][0]);
+			// Find closing ```
+			$close_pos = strpos($text, '```', $offset + $start_len);
+			if ($close_pos !== false) {
+				$content = substr($text, $offset + $start_len, $close_pos - ($offset + $start_len));
+				$blocks[] = ['content' => $content, 'lang' => $lang, 'type' => 'backtick'];
+				$new_text .= "\1";
+				$offset = $close_pos + 3; // + length of ```
+			} else {
+				// No closing backtick, treat as text
+				$new_text .= '```'; // Just append the backticks and continue
+				$offset += 3;
+			}
+		} elseif ($type === 'bbcode') {
+			// Use extract_blocks-like logic to find matching [/code]
+			// We know [code starts at $offset.
+			$lang = $matches['bbcode'][1][0] ?? '';
+
+			// We need to find the balanced closing tag.
+			// We can use the logic from extract_blocks or simplified if no nesting allowed inside code.
+			// FluxBB [code] allows nesting? extract_blocks suggests yes.
+			// Let's assume we can scan for next [/code] while counting [code]
+
+			// Simple approach: find next [/code]. If nested [code] exists, this breaks.
+			// But since we are inside a parser loop, maybe we can just find the closing tag.
+			// Correct logic:
+			$open_tag_len = strlen($matches['bbcode'][0][0]);
+			$inner_offset = $offset + $open_tag_len;
+
+			// Use a simplified recursive search or counter
+			$depth = 1;
+			$current_pos = $inner_offset;
+			$end_block_pos = false;
+
+			while ($depth > 0) {
+				$next_open = stripos($text, '[code', $current_pos); // Check for [code...]
+				$next_close = stripos($text, '[/code]', $current_pos);
+
+				if ($next_close === false) break; // No closing tag
+
+				if ($next_open !== false && $next_open < $next_close) {
+					// Found a potential nested open tag.
+					// Check if it's a real tag
+					if (preg_match('/^\[code(?:=[^\]]*)?\]/i', substr($text, $next_open), $tm)) {
+						$depth++;
+						$current_pos = $next_open + strlen($tm[0]);
+					} else {
+						// False alarm
+						$current_pos = $next_open + 5;
+					}
+				} else {
+					$depth--;
+					$current_pos = $next_close + 7; // [/code] length
+					if ($depth == 0) {
+						$end_block_pos = $next_close;
+					}
+				}
+			}
+
+			if ($end_block_pos !== false) {
+				$content = substr($text, $inner_offset, $end_block_pos - $inner_offset);
+				$blocks[] = ['content' => $content, 'lang' => $lang, 'type' => 'bbcode'];
+				$new_text .= "\1";
+				$offset = $end_block_pos + 7;
+			} else {
+				// No closing tag
+				$new_text .= substr($text, $offset, $open_tag_len);
+				$offset += $open_tag_len;
+			}
+
+		} elseif ($type === 'html') {
+			// &lt;pre&gt;&lt;code&gt; ... &lt;/code&gt;&lt;/pre&gt;
+			$start_len = 23; // len of &lt;pre&gt;&lt;code&gt;
+			$close_str = '&lt;/code&gt;&lt;/pre&gt;';
+			$close_pos = stripos($text, $close_str, $offset + $start_len);
+
+			if ($close_pos !== false) {
+				$content = substr($text, $offset + $start_len, $close_pos - ($offset + $start_len));
+				$blocks[] = ['content' => $content, 'lang' => 'html', 'type' => 'html']; // Usually HTML blocks are HTML content
+				$new_text .= "\1";
+				$offset = $close_pos + strlen($close_str);
+			} else {
+				$new_text .= substr($text, $offset, $start_len);
+				$offset += $start_len;
+			}
+		} elseif ($type === 'indent') {
+			// Indented block. Read lines until a non-indented line is found.
+			// Current $offset is at start of line (or after \n).
+			// We already matched 4 spaces/tab.
+			$current_pos = $offset;
+			$content = '';
+
+			while ($current_pos < $len) {
+				// Get next line
+				$next_newline = strpos($text, "\n", $current_pos);
+				if ($next_newline === false) $next_newline = $len;
+
+				$line = substr($text, $current_pos, $next_newline - $current_pos);
+
+				// Check indent
+				if (preg_match('/^(?:    |\t)(.*)$/', $line, $lm)) {
+					$content .= $lm[1] . "\n";
+					$current_pos = $next_newline + 1;
+				} else {
+					// End of block.
+					// But wait, blank lines are allowed in indented blocks.
+					if (trim($line) === '') {
+						$content .= "\n";
+						$current_pos = $next_newline + 1;
+					} else {
+						// Non-empty, non-indented line. Stop.
+						break;
+					}
+				}
+			}
+
+			$blocks[] = ['content' => trim($content, "\n"), 'lang' => '', 'type' => 'indent'];
+			$new_text .= "\1";
+			$offset = $current_pos;
+		}
+	}
+
+	return [$blocks, $new_text];
+}
+
+
+//
 // Parse message text
 //
 function parse_message(string $text, bool $hide_smilies)
@@ -990,9 +1226,29 @@ function parse_message(string $text, bool $hide_smilies)
 	// Convert applicable characters to HTML entities
 	$text = pun_htmlspecialchars($text);
 
-	// If the message contains a code tag we have to split it up (text within [code][/code] shouldn't be touched)
-	if (strpos($text, '[code]') !== false && strpos($text, '[/code]') !== false)
-		list($inside, $text) = extract_blocks($text, '[code]', '[/code]');
+	// Enhanced Code Block Extraction
+	// If auto code highlight is enabled, we use the enhanced extractor.
+	// Otherwise, we use the standard extract_blocks for [code] only (for backward compat if option is off,
+	// though the task implies modifying it to support these features generally).
+	// However, if we change the extraction logic, we should use it consistently.
+	// The option 'o_auto_code_highlight' controls the *highlighting* (JS inclusion/classes).
+	// The *detection* of Markdown can be considered a parser improvement.
+	// We will use the new extractor but only add language classes if enabled.
+
+	$extracted_blocks = [];
+
+	if (($pun_config['o_auto_code_highlight'] ?? '0') == '1') {
+		list($extracted_blocks, $text) = extract_code_enhanced($text);
+	} else {
+		// Legacy behavior: only [code]
+		if (strpos($text, '[code]') !== false && strpos($text, '[/code]') !== false) {
+			list($inside, $text) = extract_blocks($text, '[code]', '[/code]');
+			// Convert legacy format to our block format
+			foreach ($inside as $c) {
+				$extracted_blocks[] = ['content' => $c, 'lang' => '', 'type' => 'bbcode'];
+			}
+		}
+	}
 
 	if ($pun_config['p_message_bbcode'] == '1' && strpos($text, '[') !== false && strpos($text, ']') !== false)
 		$text = do_bbcode($text);
@@ -1004,18 +1260,45 @@ function parse_message(string $text, bool $hide_smilies)
 	$replace = array('<br />', '&#160; &#160; ', '&#160; ', ' &#160;');
 	$text = str_replace($pattern, $replace, $text);
 
-	// If we split up the message before we have to concatenate it together again (code tags)
-	if (isset($inside))
+	// Re-assemble code blocks
+	if (!empty($extracted_blocks))
 	{
 		$parts = explode("\1", $text);
 		$text = '';
 		foreach ($parts as $i => $part)
 		{
 			$text .= $part;
-			if (isset($inside[$i]))
+			if (isset($extracted_blocks[$i]))
 			{
-				$num_lines = substr_count($inside[$i], "\n");
-				$text .= '</p><div class="codebox"><pre'.(($num_lines > 28) ? ' class="vscroll"' : '').'><code>'.pun_trim($inside[$i], "\n\r").'</code></pre></div><p>';
+				$block = $extracted_blocks[$i];
+				$code_content = pun_trim($block['content'], "\n\r");
+				$lang = $block['lang'];
+				$num_lines = substr_count($code_content, "\n");
+
+				$class_attr = '';
+				if (($pun_config['o_auto_code_highlight'] ?? '0') == '1') {
+					if ($lang) {
+						$class_attr = ' class="language-' . pun_htmlspecialchars($lang) . '"';
+					} else {
+						// Auto-detection desired? Highlight.js uses 'language-plaintext' to disable,
+						// or no class to auto-detect (if configured).
+						// Or simply 'class="language-auto"'.
+						// Prsim requires specific class.
+						// We'll leave it empty for auto-detect (highlight.js default behavior on <pre><code>?)
+						// Actually highlight.js highlightAll() looks for <pre><code>.
+						// If no class, it might not try auto unless configured.
+						// But the requirements say "Auto-detection: Apply language detection... without explicit language specifiers".
+						// We will add no class, or a specific marker class?
+						// Highlight.js: "If the language is not specified... highlight.js will try to detect the language automatically."
+						// So empty class is fine.
+					}
+				}
+
+				// The 'vscroll' class logic from original
+				$pre_class = ($num_lines > 28) ? ' class="vscroll"' : '';
+
+				// Output
+				$text .= '</p><div class="codebox"><pre'.$pre_class.'><code'.$class_attr.'>'.$code_content.'</code></pre></div><p>';
 			}
 		}
 	}

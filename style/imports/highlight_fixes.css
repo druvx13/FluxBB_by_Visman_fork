@@ -1,0 +1,109 @@
+/* Fix code block width and background consistency for Highlight.js */
+.pun .codebox pre.vscroll {
+    height: auto; /* Allow pre to expand to content height (removing vertical scrollbar limitation) */
+    overflow: visible; /* Show all content */
+    width: 100%;
+}
+
+/* Ensure code element takes full width */
+.pun .codebox pre code {
+    display: block; /* Make it block to fill container */
+    width: 100%; /* Ensure it fills width */
+    box-sizing: border-box; /* Include padding in width */
+    padding: 1em; /* Standard padding */
+    overflow-x: auto; /* Allow horizontal scrolling if lines are too long */
+    white-space: pre; /* Maintain formatting */
+}
+
+/* Fix for dark themes: Ensure background covers the whole block */
+.pun .codebox {
+    background: transparent; /* Remove FluxBB codebox background */
+    border: none; /* Optional: remove border if highlighter provides one */
+    padding: 0;
+}
+
+/* Ensure the copy button is positioned correctly */
+.codebox {
+    position: relative;
+}
+.code-copy-btn {
+    z-index: 10;
+}
+
+/* Base body styles with transitions */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light Mode */
+body.light-mode {
+    background-color: #ffffff;
+    color: #333333;
+}
+body.light-mode pre.vscroll {
+    background-color: #f5f5f5 !important;
+    border-color: #ccc !important;
+    color: #333333 !important; /* Ensure text is dark in light mode */
+}
+body.light-mode code.hljs {
+    background-color: #f5f5f5 !important; /* Match pre background */
+    color: #333333 !important; /* Ensure text is dark in light mode */
+}
+
+/* Dark Mode */
+body.dark-mode {
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+}
+body.dark-mode pre.vscroll {
+    background-color: #2d2d2d !important;
+    border-color: #555 !important;
+    color: #f0f0f0 !important; /* Ensure text is light in dark mode */
+}
+body.dark-mode code.hljs {
+    background-color: #2d2d2d !important; /* Match pre background */
+    color: #f0f0f0 !important; /* Ensure text is light in dark mode */
+}
+
+/* Specific Highlighting Fixes within dark/light mode */
+body.light-mode .hljs-comment {
+    color: #6a9955 !important; /* Darker green for comments in light mode */
+}
+body.dark-mode .hljs-comment {
+    color: #57a64a !important; /* Lighter green for comments in dark mode */
+}
+
+body.light-mode .hljs-keyword, body.light-mode .hljs-built_in, body.light-mode .hljs-type {
+    color: #0000ff !important; /* Blue for keywords etc. in light mode */
+}
+body.dark-mode .hljs-keyword, body.dark-mode .hljs-built_in, body.dark-mode .hljs-type {
+    color: #569cd6 !important; /* Lighter blue for keywords etc. in dark mode */
+}
+
+body.light-mode .hljs-string {
+    color: #a31515 !important; /* Red for strings in light mode */
+}
+body.dark-mode .hljs-string {
+    color: #d69d85 !important; /* Lighter red/orange for strings in dark mode */
+}
+
+body.light-mode .hljs-number {
+    color: #098658 !important; /* Green for numbers in light mode */
+}
+body.dark-mode .hljs-number {
+    color: #b8d7a3 !important; /* Lighter green for numbers in dark mode */
+}
+
+body.light-mode .hljs-function {
+    color: #795e26 !important; /* Brown for functions in light mode */
+}
+body.dark-mode .hljs-function {
+    color: #dcdcaa !important; /* Yellow for functions in dark mode */
+}
+
+body.light-mode .hljs-meta {
+    color: #808080 !important; /* Grey for meta in light mode */
+}
+body.dark-mode .hljs-meta {
+    color: #9cdcfe !important; /* Light blue for meta in dark mode */
+}

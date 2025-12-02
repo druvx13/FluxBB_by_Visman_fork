@@ -115,6 +115,7 @@ if (isset($pun_config['o_auto_code_highlight']) && $pun_config['o_auto_code_high
 		}
 		echo '</script>'."\n";
 	}
+	echo '<link rel="stylesheet" type="text/css" href="style/imports/highlight_fixes.css" />'."\n";
 	echo '<script src="js/highlight_loader.js" defer="defer"></script>'."\n";
 }
 

@@ -42,6 +42,19 @@
         var blocks = document.querySelectorAll('pre code');
         blocks.forEach(function(block) {
             var pre = block.parentNode;
+
+            // Fix for background coverage: Transfer highlight classes to parent PRE
+            // For highlight.js
+            if (block.classList.contains('hljs')) {
+                pre.classList.add('hljs');
+            }
+            // For Prism or standard language classes
+            block.classList.forEach(function(cls) {
+                if (cls.startsWith('language-')) {
+                    pre.classList.add(cls);
+                }
+            });
+
             if (pre.querySelector('.code-copy-btn')) return;
 
             var btn = document.createElement('button');

@@ -114,33 +114,35 @@
     }
 
     // Lazy load logic
-    var codeBlocks = document.querySelectorAll('pre code');
-    if (codeBlocks.length > 0) {
-        applyTheme();
+    document.addEventListener('DOMContentLoaded', function() {
+        var codeBlocks = document.querySelectorAll('pre code');
+        if (codeBlocks.length > 0) {
+            applyTheme();
 
-        // Try Highlight.js
-        loadScript(highlightPath + 'highlight.min.js',
-            function() {
-                // Success
-                initHighlightJS();
-            },
-            function() {
-                // Fallback to Prism
-                console.warn('Highlight.js failed to load, falling back to Prism.js');
-                window.usingPrismFallback = true;
-                applyTheme(); // Switch theme to prism
-                loadScript(prismPath + 'prism.min.js', function() {
-                    initPrismJS();
-                }, function() {
-                    console.error('Both highlighters failed to load.');
-                });
+            // Try Highlight.js
+            loadScript(highlightPath + 'highlight.min.js',
+                function() {
+                    // Success
+                    initHighlightJS();
+                },
+                function() {
+                    // Fallback to Prism
+                    console.warn('Highlight.js failed to load, falling back to Prism.js');
+                    window.usingPrismFallback = true;
+                    applyTheme(); // Switch theme to prism
+                    loadScript(prismPath + 'prism.min.js', function() {
+                        initPrismJS();
+                    }, function() {
+                        console.error('Both highlighters failed to load.');
+                    });
+                }
+            );
+
+            // Watch for theme changes
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
             }
-        );
-
-        // Watch for theme changes
-        if (window.matchMedia) {
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
         }
-    }
+    });
 
 })();

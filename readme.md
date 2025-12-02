@@ -29,6 +29,9 @@ This fork includes automatic syntax highlighting for code blocks.
     *   Light/Dark theme support.
 *   **Configuration**: Enable via Admin Panel > Options > Features > "Enable auto-code highlighting".
 
+**Installation Note:**
+After updating the files, you must run `install_highlight.php` (e.g., `http://yourforum.com/install_highlight.php`) once to update the database and configuration cache. Then delete the file for security.
+
 ## Links
 
 * Homepage: https_://fluxbb.org

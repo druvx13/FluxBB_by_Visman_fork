@@ -100,6 +100,24 @@ if (!defined('PUN_ALLOW_INDEX'))
 <link rel="stylesheet" type="text/css" href="style/<?php echo $pun_user['style'].'.css' ?>" />
 <?php
 
+if (isset($pun_config['o_auto_code_highlight']) && $pun_config['o_auto_code_highlight'] == '1') {
+	if (file_exists(PUN_ROOT.'config.php')) {
+		// Try to read whitelist from config.php if it exists and defines it (unlikely in FluxBB structure but per requirement)
+		// Usually config.php is just DB creds. But we can check if variable is defined.
+		// Since config.php is included in common.php, if it defined a variable, it would be available.
+		// However, config.php is usually inside include/common.php -> require 'config.php'.
+		// So if $fluxbb_code_whitelist is defined there, we can use it.
+		// We'll output a JS config object.
+		echo '<script type="text/javascript">'."\n";
+		echo 'window.fluxbb_code_config = {};'."\n";
+		if (isset($fluxbb_code_whitelist) && is_array($fluxbb_code_whitelist)) {
+			echo 'window.fluxbb_code_config.whitelist = ' . json_encode($fluxbb_code_whitelist) . ';'."\n";
+		}
+		echo '</script>'."\n";
+	}
+	echo '<script src="js/highlight_loader.js" defer="defer"></script>'."\n";
+}
+
 if (defined('PUN_ADMIN_CONSOLE'))
 {
 	if (file_exists(PUN_ROOT.'style/'.$pun_user['style'].'/base_admin.css'))

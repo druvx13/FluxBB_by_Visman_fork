@@ -1,0 +1,37 @@
+/* Fix code block width and background consistency for Highlight.js */
+.pun .codebox pre {
+    width: 100%;
+    overflow: auto; /* Enable scrolling */
+    background: transparent; /* Remove FluxBB default background if any */
+    padding: 0; /* Remove padding from pre, let code handle it */
+    margin: 0;
+}
+
+/* Ensure code element takes full width */
+.pun .codebox pre code {
+    display: block; /* Make it block to fill container */
+    min-width: 100%; /* Ensure it fills width even if text is short */
+    box-sizing: border-box; /* Include padding in width */
+    padding: 1em; /* Standard padding */
+    overflow-x: visible; /* Let pre handle scrolling */
+}
+
+/* Fix for dark themes: Ensure background covers the whole block */
+.pun .codebox {
+    background: transparent; /* Remove FluxBB codebox background */
+    border: none; /* Optional: remove border if highlighter provides one */
+    padding: 0;
+}
+
+/* Override FluxBB default code styling if necessary */
+.pun pre, .pun code {
+    /* FluxBB sets font-family, we can keep it or let highlight.js decide */
+}
+
+/* Ensure the copy button is positioned correctly */
+.codebox {
+    position: relative;
+}
+.code-copy-btn {
+    z-index: 10;
+}

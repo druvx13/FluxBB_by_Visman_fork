@@ -18,6 +18,17 @@ of the other forums have whilst not sacrificing essential functionality or usabi
 * Make use of a PHP accelerator such as Zend OPcache
 * Make sure PHP has the zlib module installed to allow FluxBB to gzip output
 
+## Syntax Highlighting
+
+This fork includes automatic syntax highlighting for code blocks.
+*   **Libraries**: Uses [highlight.js](https://highlightjs.org/) (v11.9.0) with a fallback to [Prism.js](https://prismjs.com/) (v1.29.0).
+*   **Features**:
+    *   Automatic detection of languages.
+    *   Support for Markdown-style backticks (```) and indentation.
+    *   Copy-to-clipboard button.
+    *   Light/Dark theme support.
+*   **Configuration**: Enable via Admin Panel > Options > Features > "Enable auto-code highlighting".
+
 ## Links
 
 * Homepage: https_://fluxbb.org

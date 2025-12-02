@@ -1,0 +1,38 @@
+/* Fix syntax highlight background coverage issues in FluxBB.
+   This file is included by header.php when syntax highlighting is enabled.
+   It works in conjunction with js/highlight_loader.js which adds the .hljs class
+   to the parent PRE element of highlighted code blocks.
+*/
+
+/* Apply styles to the parent PRE element when it has the .hljs class. */
+.pun .codebox pre.hljs {
+    /*
+       Background color is provided by the highlight.js theme CSS which targets .hljs.
+       By adding .hljs to PRE, we ensure the background covers the entire scrollable container.
+    */
+    display: block;
+    box-sizing: border-box;
+    /* Ensure no conflicting scrollbars */
+    overflow: auto;
+}
+
+/* Adjust the CODE element */
+.pun .codebox pre.hljs code.hljs {
+    /* Make code element behave as a block filling the container */
+    display: block;
+    min-width: 100%;
+
+    /* Remove background from code so the PRE background shows through.
+       This avoids "gaps" when content is shorter than container or during scrolling. */
+    background: transparent !important;
+
+    /* Remove potential double scrollbars. FluxBB uses PRE for scrolling. */
+    overflow-x: visible;
+
+    /* Ensure box model consistency */
+    box-sizing: border-box;
+
+    /* Remove margin/border that might interfere */
+    margin: 0;
+    border: 0;
+}

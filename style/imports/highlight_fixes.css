@@ -1,0 +1,26 @@
+/*
+   Fixes for Syntax Highlighting integration (highlight.js)
+   Ensures background covers the full scrollable area of the code block.
+*/
+
+/* Target FluxBB codeboxes specifically */
+.pun .codebox pre,
+.pun div[class*=codebox] pre {
+    padding: 0; /* Remove any padding from pre to avoid gaps */
+}
+
+/* Force code element to behave as a block-like element that fills the container */
+.pun .codebox pre code,
+.pun div[class*=codebox] pre code {
+    display: inline-block; /* Expands to fit wide content (horizontal scroll coverage) */
+    min-width: 100%;       /* Fills width of container if content is narrow */
+    min-height: 100%;      /* Fills height of container if content is short (vertical scroll coverage) */
+    box-sizing: border-box; /* Include padding in width/height calculations */
+    white-space: pre;      /* Maintain pre formatting */
+    vertical-align: top;   /* Ensure top alignment */
+    overflow-x: visible;   /* Let pre handle scrolling */
+}
+
+/* Override potential IE hacks that add padding */
+* html .pun .codebox pre { padding-bottom: 0; }
+*:first-child+html .pun .codebox pre { padding-bottom: 0; }

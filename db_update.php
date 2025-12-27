@@ -2474,6 +2474,11 @@ foreach ($errors[$id] as $cur_error)
 			if (!array_key_exists('o_censoring_count', $pun_config))
 				$db->query('INSERT INTO '.$db->prefix.'config (conf_name, conf_value) VALUES (\'o_censoring_count\', \'0\')') or error('Unable to insert config value \'o_censoring_count\'', __FILE__, __LINE__, $db->error());
 		} // rev.87
+
+		// Add auto code highlight option
+		if (!array_key_exists('o_auto_code_highlight', $pun_config))
+			$db->query('INSERT INTO '.$db->prefix.'config (conf_name, conf_value) VALUES (\'o_auto_code_highlight\', \'0\')') or error('Unable to insert config value \'o_auto_code_highlight\'', __FILE__, __LINE__, $db->error());
+
 		// Visman
 		break;
 

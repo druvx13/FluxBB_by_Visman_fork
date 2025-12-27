@@ -65,6 +65,7 @@ if (isset($_POST['form_sent'], $_POST['form']) && is_array($_POST['form']))
 		'gzip'					=> sva_gf('gzip') != '1' ? '0' : '1',
 		'search_all_forums'		=> sva_gf('search_all_forums') != '1' ? '0' : '1',
 		'additional_navlinks'	=> pun_trim(sva_gf('additional_navlinks')),
+		'auto_code_highlight'	=> sva_gf('auto_code_highlight') != '1' ? '0' : '1',
 		'feed_type'				=> intval(sva_gf('feed_type')),
 		'feed_ttl'				=> intval(sva_gf('feed_ttl')),
 		'report_method'			=> intval(sva_gf('report_method')),
@@ -594,6 +595,14 @@ generate_admin_menu('options');
 										<label class="conl"><input type="radio" name="form[search_all_forums]" value="1"<?php if ($pun_config['o_search_all_forums'] == '1') echo ' checked="checked"' ?> />&#160;<strong><?php echo $lang_admin_common['Yes'] ?></strong></label>
 										<label class="conl"><input type="radio" name="form[search_all_forums]" value="0"<?php if ($pun_config['o_search_all_forums'] == '0') echo ' checked="checked"' ?> />&#160;<strong><?php echo $lang_admin_common['No'] ?></strong></label>
 										<span class="clearb"><?php echo $lang_admin_options['Search all help'] ?></span>
+									</td>
+								</tr>
+								<tr>
+									<th scope="row"><?php echo $lang_admin_options['Auto code highlight label'] ?></th>
+									<td>
+										<label class="conl"><input type="radio" name="form[auto_code_highlight]" value="1"<?php if (($pun_config['o_auto_code_highlight'] ?? '0') == '1') echo ' checked="checked"' ?> />&#160;<strong><?php echo $lang_admin_common['Yes'] ?></strong></label>
+										<label class="conl"><input type="radio" name="form[auto_code_highlight]" value="0"<?php if (($pun_config['o_auto_code_highlight'] ?? '0') == '0') echo ' checked="checked"' ?> />&#160;<strong><?php echo $lang_admin_common['No'] ?></strong></label>
+										<span class="clearb"><?php echo $lang_admin_options['Auto code highlight help'] ?></span>
 									</td>
 								</tr>
 								<tr>

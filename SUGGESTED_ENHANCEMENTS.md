@@ -49,7 +49,12 @@ function pun_hash($str) {
 
 // NEW CODE (your implementation):
 function pun_hash($str) {
-    return password_hash($str, PASSWORD_ARGON2ID);
+    // Argon2ID with recommended security parameters
+    return password_hash($str, PASSWORD_ARGON2ID, [
+        'memory_cost' => 65536,  // 64 MB
+        'time_cost' => 4,         // 4 iterations
+        'threads' => 3            // 3 parallel threads
+    ]);
 }
 
 function pun_verify_password($password, $hash) {
@@ -99,15 +104,22 @@ class RateLimiter {
     private $lockout_time = 900; // 15 minutes
     
     public function checkLoginAttempts($ip_address, $username) {
-        // Check failed attempts in last 15 minutes
-        $query = "SELECT COUNT(*) FROM login_attempts 
-                  WHERE (ip_address = ? OR username = ?) 
-                  AND attempt_time > DATE_SUB(NOW(), INTERVAL 15 MINUTE)
-                  AND success = 0";
+        // Check IP-based attempts
+        $query_ip = "SELECT COUNT(*) FROM login_attempts 
+                     WHERE ip_address = ? 
+                     AND attempt_time > DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+                     AND success = 0";
+        $ip_attempts = $this->db->query($query_ip, [$ip_address]);
         
-        $result = $this->db->query($query, [$ip_address, $username]);
+        // Check username-based attempts
+        $query_user = "SELECT COUNT(*) FROM login_attempts 
+                       WHERE username = ? 
+                       AND attempt_time > DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+                       AND success = 0";
+        $user_attempts = $this->db->query($query_user, [$username]);
         
-        if ($result >= $this->max_attempts) {
+        // Block if either exceeds limit (prevents bypass by switching)
+        if ($ip_attempts >= $this->max_attempts || $user_attempts >= $this->max_attempts) {
             return false; // Account locked
         }
         return true; // Can attempt login
@@ -169,15 +181,24 @@ $result = $db->query($query, [$username]);
 ```php
 // File: include/common.php (add to header function)
 
+// Generate nonce for inline scripts (better than 'unsafe-inline')
+$csp_nonce = base64_encode(random_bytes(16));
+define('CSP_NONCE', $csp_nonce);
+
 header("Content-Security-Policy: default-src 'self'; 
-        script-src 'self' 'unsafe-inline'; 
-        style-src 'self' 'unsafe-inline'; 
-        img-src 'self' data: https:;");
+        script-src 'self' 'nonce-{$csp_nonce}'; 
+        style-src 'self' 'nonce-{$csp_nonce}'; 
+        img-src 'self' data: https:;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';");
         
 header("X-Frame-Options: SAMEORIGIN");
 header("X-Content-Type-Options: nosniff");
 header("X-XSS-Protection: 1; mode=block");
 header("Referrer-Policy: strict-origin-when-cross-origin");
+
+// Note: Inline scripts/styles must use: <script nonce="<?php echo CSP_NONCE; ?>">
 ```
 
 **Estimated Time:** 2-3 days
@@ -264,8 +285,25 @@ function toggleTheme() {
 // File: notifications_stream.php
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
+header('Connection: keep-alive');
+
+// Set maximum execution time (5 minutes)
+set_time_limit(300);
+$start_time = time();
+$max_duration = 300;
 
 while (true) {
+    // Check if client disconnected
+    if (connection_aborted()) {
+        break;
+    }
+    
+    // Check if max duration exceeded
+    if (time() - $start_time > $max_duration) {
+        echo "event: timeout\ndata: Connection timeout\n\n";
+        break;
+    }
+    
     $new_posts = check_new_posts($user_id);
     
     if ($new_posts) {
@@ -389,11 +427,15 @@ class RedisCache {
 // Usage:
 $cache = new RedisCache();
 
+// Sanitize forum_id for safe cache key construction
+$safe_forum_id = (int) $forum_id;  // Ensure it's an integer
+$cache_key = 'forum_topics_' . $safe_forum_id;
+
 // Try cache first
-$topics = $cache->get('forum_topics_' . $forum_id);
+$topics = $cache->get($cache_key);
 if (!$topics) {
-    $topics = $db->get_topics($forum_id);
-    $cache->set('forum_topics_' . $forum_id, $topics, 300);
+    $topics = $db->get_topics($safe_forum_id);
+    $cache->set($cache_key, $topics, 300);
 }
 ```
 

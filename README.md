@@ -1,4 +1,18 @@
-# FluxBB (Visman Fork)
+# FluxBB (Visman Fork) - Enhanced for Academic Project
+
+## 🎓 Academic Project Notice
+
+**This repository is being used as a foundation for an academic minor project** at [Your College Name] during the 4th semester (2025-2026). The project involves substantial security enhancements, performance optimizations, and feature additions to the existing FluxBB forum platform.
+
+**Project Status:** In Development  
+**Project Type:** Minor Project (4th Semester) → Continuing in 5th & 6th Semesters  
+**Student(s):** [@druvx13](https://github.com/druvx13) and team members  
+
+📖 **See [PROJECT_PROPOSAL.md](PROJECT_PROPOSAL.md)** for complete project details  
+📝 **See [STUDENT_MODIFICATIONS.md](STUDENT_MODIFICATIONS.md)** for detailed modification log  
+⚖️ **See [ACADEMIC_USAGE.md](ACADEMIC_USAGE.md)** for GPL compliance and academic usage guidelines
+
+---
 
 ## 📜 Project Overview
 
@@ -10,6 +24,18 @@ The primary design goals of FluxBB are:
 * **Flexibility:** A robust plugin and addon system.
 
 This fork ("FluxBB by Visman") introduces extended functionality such as improved BBCode parsing, subforum caching, enhanced security measures, and additional administration tools, making it a "battery-included" version of the classic forum software.
+
+### 🎯 Student Enhancement Goals
+
+As part of the academic minor project, the following enhancements are planned/implemented:
+
+- 🔒 **Security Hardening:** Modern password hashing (Argon2/bcrypt), 2FA, rate limiting, SQL injection fixes
+- ⚡ **Performance Optimization:** Redis caching, database query optimization, lazy loading
+- 🎨 **Modern UI/UX:** Responsive design, dark mode, improved mobile experience
+- 🔧 **New Features:** RESTful API, Markdown support, real-time notifications
+- 🧪 **Quality Assurance:** Unit testing (PHPUnit), CI/CD pipeline, comprehensive documentation
+
+**Progress:** See [STUDENT_MODIFICATIONS.md](STUDENT_MODIFICATIONS.md) for detailed implementation status.
 
 ---
 
@@ -147,5 +173,49 @@ The installation script (`install.php`) handles the initial schema creation.
 This project is released under the **GNU General Public License (GPL) version 2 or higher**.
 See the `LICENSE` file for the full legal text.
 
-Based on code by Rickard Andersson (PunBB) and the FluxBB Team.
-Modified by Visman.
+**Original Work Attribution:**
+- Based on code by Rickard Andersson (PunBB)
+- Based on FluxBB Team (FluxBB)
+- Modified by Visman (FluxBB by Visman fork)
+- **Enhanced by [@druvx13](https://github.com/druvx13)** and team for academic minor project (2025-2026)
+
+### 🎓 Academic Usage & Attribution
+
+This derivative work is being developed as part of a college minor project. All modifications are:
+- ✅ Properly documented in [STUDENT_MODIFICATIONS.md](STUDENT_MODIFICATIONS.md)
+- ✅ Released under the same GPL v2 license
+- ✅ Fully attributed to original authors in [NOTICE.md](NOTICE.md)
+- ✅ Compliant with academic integrity standards
+
+**For students using this as reference:** Please review [ACADEMIC_USAGE.md](ACADEMIC_USAGE.md) to understand how to properly use open-source software for academic projects while maintaining ethical and legal compliance.
+
+---
+
+## 📚 Project Documentation
+
+This repository includes comprehensive documentation for different audiences:
+
+### For Students & Developers:
+- 📋 **[PROJECT_PROPOSAL.md](PROJECT_PROPOSAL.md)** - Complete project definition, timeline, and deliverables
+- 🔍 **[SUGGESTED_ENHANCEMENTS.md](SUGGESTED_ENHANCEMENTS.md)** - Detailed implementation guides for enhancements
+- 📝 **[STUDENT_MODIFICATIONS.md](STUDENT_MODIFICATIONS.md)** - Log of all student modifications
+- ⚖️ **[ACADEMIC_USAGE.md](ACADEMIC_USAGE.md)** - GPL compliance guide for academic use
+
+### For Technical Reference:
+- 🏗️ **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and request lifecycle
+- 📂 **[DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md)** - Codebase organization
+- 🔄 **[DATA_FLOW.md](DATA_FLOW.md)** - Data flow visualization
+- 🔒 **[SECURITY.md](SECURITY.md)** - Security architecture and best practices
+
+### For Administrators:
+- ⚙️ **[CONFIGURATION.md](CONFIGURATION.md)** - Configuration reference
+- 🚀 **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment guide
+- 👤 **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** - Administration manual
+- 🔧 **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
+
+### Legal & Compliance:
+- 📜 **[LICENSE](LICENSE)** - GNU GPL v2 license text
+- 📢 **[NOTICE.md](NOTICE.md)** - Third-party attributions
+- 🔐 **[SECURITY_DISCLOSURE.md](SECURITY_DISCLOSURE.md)** - Vulnerability reporting
+
+See **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** for a complete overview.
